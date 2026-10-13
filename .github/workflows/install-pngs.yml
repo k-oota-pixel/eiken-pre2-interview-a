@@ -3,7 +3,7 @@ name: Install individual PNG images
 on:
   push:
     paths:
-      - image_payload.b64
+      - image_payload.ready
   workflow_dispatch:
 
 permissions:
@@ -20,25 +20,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -f image_payload.b64 ]; then
-            echo "No payload found; nothing to do."
-            exit 0
-          fi
+          test -f image_payload.ready
+          test -d image_payload_parts
+          cat image_payload_parts/chunk-* > /tmp/image_payload.b64
           mkdir -p images
-          base64 -d image_payload.b64 > /tmp/images.tar.gz
+          base64 -d /tmp/image_payload.b64 > /tmp/images.tar.gz
           tar -xzf /tmp/images.tar.gz -C images
           test -f images/01.png
           test -f images/20.png
           sed -i 's/\.webp`/\.png`/' app.js
           sed -i '/<script src="sprite.js"><\/script>/d' index.html
-          rm -f sprite.js images/strip1.webp images/strip2.webp images/strip3.webp images/strip4.webp image_payload.b64
+          rm -f sprite.js images/strip1.webp images/strip2.webp images/strip3.webp images/strip4.webp image_payload.ready
+          rm -rf image_payload_parts
       - name: Commit PNG images
         shell: bash
         run: |
-          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
-            echo "No changes to commit."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
