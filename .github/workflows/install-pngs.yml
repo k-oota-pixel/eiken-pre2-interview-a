@@ -1,58 +1,57 @@
-name: Convert question images to individual PNGs
+name: Install 20 individual PNG images
 
 on:
   push:
+    branches:
+      - png-assets
     paths:
-      - convert_sprites.ready
-  workflow_dispatch:
+      - image_payload.ready
 
 permissions:
   contents: write
 
 jobs:
-  convert:
+  install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: png-assets
           fetch-depth: 0
       - name: Install Pillow
         run: python -m pip install --quiet pillow
-      - name: Split strips into 20 PNG files
+      - name: Build individual PNG files
         shell: bash
         run: |
           set -euo pipefail
+          cat image_payload_parts/chunk-* > /tmp/images.b64
+          base64 -d /tmp/images.b64 > /tmp/images.tar.gz
+          mkdir -p /tmp/jpgs images
+          tar -xzf /tmp/images.tar.gz -C /tmp/jpgs
           python - <<'PY'
           from pathlib import Path
           from PIL import Image
-
-          images = Path('images')
-          out_id = 1
-          for strip_no in range(1, 5):
-              path = images / f'strip{strip_no}.webp'
-              im = Image.open(path).convert('RGB')
-              w, h = im.size
-              if w % 5 != 0:
-                  raise RuntimeError(f'{path}: width {w} is not divisible by 5')
-              cell_w = w // 5
-              print(f'{path}: {w}x{h}, each question {cell_w}x{h}')
-              for col in range(5):
-                  crop = im.crop((col * cell_w, 0, (col + 1) * cell_w, h))
-                  target = images / f'{out_id:02d}.png'
-                  crop.save(target, 'PNG', optimize=True)
-                  print(f'created {target} {crop.size[0]}x{crop.size[1]}')
-                  out_id += 1
-          assert out_id == 21
+          source = Path('/tmp/jpgs')
+          target = Path('images')
+          target.mkdir(exist_ok=True)
+          for n in range(1, 21):
+              src = source / f'{n:02d}.jpg'
+              if not src.exists():
+                  raise RuntimeError(f'Missing {src}')
+              im = Image.open(src).convert('RGB')
+              out = target / f'{n:02d}.png'
+              im.save(out, 'PNG', optimize=True)
+              print(f'{out}: {im.size[0]}x{im.size[1]}')
           PY
-
           sed -i 's/\.webp`/\.png`/' app.js
           sed -i '/<script src="sprite.js"><\/script>/d' index.html
-          rm -f sprite.js images/strip1.webp images/strip2.webp images/strip3.webp images/strip4.webp convert_sprites.ready
-      - name: Commit individual PNG files
+          rm -f sprite.js images/strip1.webp images/strip2.webp images/strip3.webp images/strip4.webp
+          rm -rf image_payload_parts image_payload.ready convert_sprites.ready
+      - name: Commit and publish to main
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Replace image sprites with 20 individual PNG files"
-          git push
+          git commit -m "Use 20 individual PNG images"
+          git push origin HEAD:main
