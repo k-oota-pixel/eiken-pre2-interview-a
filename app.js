@@ -8,7 +8,7 @@ const SUBJECTS = {
   twoBoys: { forms: ["two boys", "the two boys", "they"] }
 };
 
-const Q = (id, scene, actions) => ({ id, scene, image: `images/${String(id).padStart(2, "0")}.webp`, actions });
+const Q = (id, scene, actions) => ({ id, scene, image: `images/${String(id).padStart(2, "0")}.png`, actions });
 const A = (subject, ...phrases) => ({ subject, phrases });
 
 const QUESTIONS = [
