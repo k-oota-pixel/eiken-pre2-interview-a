@@ -1,0 +1,46 @@
+name: Install individual PNG images
+
+on:
+  push:
+    paths:
+      - image_payload.b64
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract PNG images and simplify image loading
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f image_payload.b64 ]; then
+            echo "No payload found; nothing to do."
+            exit 0
+          fi
+          mkdir -p images
+          base64 -d image_payload.b64 > /tmp/images.tar.gz
+          tar -xzf /tmp/images.tar.gz -C images
+          test -f images/01.png
+          test -f images/20.png
+          sed -i 's/\.webp`/\.png`/' app.js
+          sed -i '/<script src="sprite.js"><\/script>/d' index.html
+          rm -f sprite.js images/strip1.webp images/strip2.webp images/strip3.webp images/strip4.webp image_payload.b64
+      - name: Commit PNG images
+        shell: bash
+        run: |
+          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Use individual PNG images for all 20 questions"
+          git push
