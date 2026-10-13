@@ -14,14 +14,13 @@
         <p class="eyebrow">EIKEN Pre-2 Speaking Practice</p>
         <h1>Picture A Training</h1>
       </div>
-      <button id="homeBtn" class="icon-btn" type="button" aria-label="最初の画面に戻る">⌂</button>
+      <button id="homeBtn" class="icon-btn" type="button" aria-label="問題一覧に戻る">⌂</button>
     </header>
 
     <section id="startScreen" class="panel start-panel">
       <div class="hero-copy">
-        <span class="pill">AI・API不要</span>
         <h2>絵を見て、人物の動作を英語で説明しよう。</h2>
-        <p>英検準2級 二次試験の Picture A を想定した20問です。スペルミスや基本的な文法ミスもブラウザ内でチェックします。</p>
+        <p>英検準2級 二次試験の Picture A を想定した20問です。スペルミスや基本的な文法ミスもチェックします。</p>
       </div>
 
       <div class="howto">
@@ -30,13 +29,15 @@
         <div><b>3</b><span>CHECK!</span></div>
       </div>
 
-      <label class="toggle-row">
-        <input id="shuffleToggle" type="checkbox" />
-        <span>問題をランダムな順番にする</span>
-      </label>
+      <div class="selector-head">
+        <h3>問題を選択</h3>
+        <p>1〜20の好きな番号から取り組めます。</p>
+      </div>
+      <div id="questionGrid" class="question-grid" aria-label="問題選択"></div>
 
-      <button id="startBtn" class="primary-btn big" type="button">START</button>
-      <p class="small-note">※ 入力内容は外部AIへ送信されません。この端末のブラウザ内だけで判定します。</p>
+      <!-- 既存ロジック互換用。画面には表示しません。 -->
+      <input id="shuffleToggle" type="checkbox" hidden />
+      <button id="startBtn" type="button" hidden>START</button>
     </section>
 
     <section id="quizScreen" class="panel quiz-panel hidden">
@@ -70,6 +71,7 @@
 
       <div class="nav-row">
         <button id="prevBtn" class="nav-btn" type="button">← 前へ</button>
+        <button id="listBtn" class="nav-btn" type="button">問題一覧</button>
         <button id="nextBtn" class="nav-btn accent" type="button">次へ →</button>
       </div>
     </section>
@@ -82,11 +84,12 @@
         <span>Perfect Questions</span>
         <strong id="perfectScore">0 / 20</strong>
       </div>
-      <button id="restartBtn" class="primary-btn big" type="button">もう一度挑戦</button>
+      <button id="restartBtn" class="primary-btn big" type="button">問題一覧へ</button>
     </section>
   </main>
 
   <script src="app.js"></script>
+  <script src="selector.js"></script>
   <script src="sprite.js"></script>
 </body>
 </html>
