@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#315d8a" />
+  <title>EIKEN Pre-2 Interview A</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">EIKEN Pre-2 Speaking Practice</p>
+        <h1>Picture A Training</h1>
+      </div>
+      <button id="homeBtn" class="icon-btn" type="button" aria-label="最初の画面に戻る">⌂</button>
+    </header>
+
+    <section id="startScreen" class="panel start-panel">
+      <div class="hero-copy">
+        <span class="pill">AI・API不要</span>
+        <h2>絵を見て、人物の動作を英語で説明しよう。</h2>
+        <p>英検準2級 二次試験の Picture A を想定した20問です。スペルミスや基本的な文法ミスもブラウザ内でチェックします。</p>
+      </div>
+
+      <div class="howto">
+        <div><b>1</b><span>絵を見る</span></div>
+        <div><b>2</b><span>英文を入力</span></div>
+        <div><b>3</b><span>CHECK!</span></div>
+      </div>
+
+      <label class="toggle-row">
+        <input id="shuffleToggle" type="checkbox" />
+        <span>問題をランダムな順番にする</span>
+      </label>
+
+      <button id="startBtn" class="primary-btn big" type="button">START</button>
+      <p class="small-note">※ 入力内容は外部AIへ送信されません。この端末のブラウザ内だけで判定します。</p>
+    </section>
+
+    <section id="quizScreen" class="panel quiz-panel hidden">
+      <div class="progress-row">
+        <div>
+          <span id="problemLabel" class="problem-label">QUESTION 1</span>
+          <span id="sceneLabel" class="scene-label"></span>
+        </div>
+        <div class="progress-text"><span id="currentNum">1</span> / <span id="totalNum">20</span></div>
+      </div>
+      <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+
+      <div class="picture-wrap">
+        <img id="questionImage" alt="英検準2級 Picture A 練習用イラスト" />
+      </div>
+
+      <div class="prompt-box">
+        <p class="english-prompt">Look at the people in the picture. Tell me as much as you can about what they are doing.</p>
+        <p class="jp-prompt">人物の動作を、1つの入力欄に1文ずつ書いてください。順番は自由です。</p>
+      </div>
+
+      <div id="answerArea" class="answer-area"></div>
+
+      <div class="action-row">
+        <button id="checkBtn" class="primary-btn" type="button">CHECK!</button>
+        <button id="retryBtn" class="secondary-btn hidden" type="button">もう一度</button>
+        <button id="revealBtn" class="ghost-btn" type="button">模範解答</button>
+      </div>
+
+      <div id="modelAnswers" class="model-answers hidden"></div>
+
+      <div class="nav-row">
+        <button id="prevBtn" class="nav-btn" type="button">← 前へ</button>
+        <button id="nextBtn" class="nav-btn accent" type="button">次へ →</button>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="panel result-panel hidden">
+      <div class="result-icon">✓</div>
+      <h2>20問終了！</h2>
+      <p id="resultText" class="result-text"></p>
+      <div class="result-card">
+        <span>Perfect Questions</span>
+        <strong id="perfectScore">0 / 20</strong>
+      </div>
+      <button id="restartBtn" class="primary-btn big" type="button">もう一度挑戦</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
