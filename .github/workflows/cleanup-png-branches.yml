@@ -1,0 +1,25 @@
+name: Clean up completed PNG migration branches
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/cleanup-png-branches.yml]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Delete obsolete migration branches
+        run: |
+          set -euo pipefail
+          git push origin --delete png-assets png-batch1 png-migration png-migration2 png-step01
+      - name: Remove this one-time workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/cleanup-png-branches.yml
+          git commit -m "Remove completed one-time branch cleanup workflow"
+          git push origin HEAD:main
