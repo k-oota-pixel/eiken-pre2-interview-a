@@ -1,0 +1,43 @@
+name: Apply coin rewards
+
+on:
+  push:
+    paths:
+      - '.github/workflows/coin-reward-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Pre-2 interview A coin rewards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          ip=Path('index.html')
+          s=ip.read_text(encoding='utf-8')
+          tag='  <script type="module" src="https://k-oota-pixel.github.io/english-playroom/coin-reward.js"></script>\n'
+          if 'english-playroom/coin-reward.js' not in s:
+              s=s.replace('  <script src="app.js"></script>',tag+'  <script src="app.js"></script>',1)
+          ip.write_text(s,encoding='utf-8')
+
+          ap=Path('app.js')
+          a=ap.read_text(encoding='utf-8')
+          needle='''  const allCorrect = results.every(r => r.type === "correct");\n  state.perfect[q.id] = allCorrect && !state.revealed[q.id];\n  $("retryBtn").classList.toggle("hidden", allCorrect);'''
+          repl=needle+'''\n  window.EnglishPlayroomCoins?.awardPre2A?.(q.id);'''
+          if 'awardPre2A?.(q.id)' not in a:
+              if needle not in a: raise SystemExit('checkCurrent hook target not found')
+              a=a.replace(needle,repl,1)
+          ap.write_text(a,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          if git diff --quiet -- index.html app.js; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html app.js
+          git commit -m "Connect Pre-2 interview A to shared coin rewards"
+          git push
