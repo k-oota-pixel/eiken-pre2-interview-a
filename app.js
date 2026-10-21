@@ -409,6 +409,7 @@ function checkCurrent() {
   const allCorrect = results.every(r => r.type === "correct");
   state.perfect[q.id] = allCorrect && !state.revealed[q.id];
   $("retryBtn").classList.toggle("hidden", allCorrect);
+  window.EnglishPlayroomCoins?.recordLearningActivity?.();
   if(results.filter(r=>r.type==='correct').length>=2)window.EnglishPlayroomCoins?.awardPre2A?.(q.id);
 }
 
