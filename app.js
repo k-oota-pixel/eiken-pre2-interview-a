@@ -388,7 +388,7 @@ function checkCurrent() {
   saveCurrentInputs();
   const q = state.order[state.pos];
   const values = state.answers[q.id];
-  const results = evaluateInputs(q, values);
+  const results = evaluateInputs(q, values);if(values.some(v=>v.trim()))window.EnglishPlayroomCoins?.recordTitleEvent?.('eiken-pre2-interview-a',{kind:'answer',itemId:String(q.id),score:state.revealed[q.id]?0:results.filter(r=>r.type==='correct').length,total:results.length});
   const inputs = [...$("answerArea").querySelectorAll("input")];
   const feedbacks = [...$("answerArea").querySelectorAll(".feedback")];
   clearFeedback();
