@@ -152,6 +152,7 @@ const QUESTIONS = [
 ];
 
 const $ = (id) => document.getElementById(id);
+globalThis.MonstudyMaterial?.setActivityGuard(()=>!$('quizScreen').classList.contains('hidden'));
 const state = {
   order: [...QUESTIONS],
   pos: 0,
