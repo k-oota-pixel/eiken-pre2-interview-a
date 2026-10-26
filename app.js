@@ -160,6 +160,8 @@ const state = {
   perfect: {},
   revealed: {}
 };
+const recordedTitleBestByQuestion=new Map();
+const activityRecordedQuestions=new Set();
 
 function normalize(text) {
   return text
@@ -389,7 +391,9 @@ function checkCurrent() {
   saveCurrentInputs();
   const q = state.order[state.pos];
   const values = state.answers[q.id];
-  const results = evaluateInputs(q, values);if(values.some(v=>v.trim()))window.EnglishPlayroomCoins?.recordTitleEvent?.('eiken-pre2-interview-a',{kind:'answer',itemId:String(q.id),score:state.revealed[q.id]?0:results.filter(r=>r.type==='correct').length,total:results.length});
+  const results = evaluateInputs(q, values);
+  const hasAnswer=values.some(v=>v.trim()),score=state.revealed[q.id]?0:results.filter(r=>r.type==='correct').length,previousBest=recordedTitleBestByQuestion.get(q.id)??-1;
+  if(hasAnswer&&score>previousBest){recordedTitleBestByQuestion.set(q.id,score);window.EnglishPlayroomCoins?.recordTitleEvent?.('eiken-pre2-interview-a',{kind:'answer',itemId:String(q.id),score,total:results.length});}
   const inputs = [...$("answerArea").querySelectorAll("input")];
   const feedbacks = [...$("answerArea").querySelectorAll(".feedback")];
   clearFeedback();
@@ -410,7 +414,7 @@ function checkCurrent() {
   const allCorrect = results.every(r => r.type === "correct");
   state.perfect[q.id] = allCorrect && !state.revealed[q.id];
   $("retryBtn").classList.toggle("hidden", allCorrect);
-  if(values.some(value=>String(value||'').trim()))window.EnglishPlayroomCoins?.recordLearningActivity?.();
+  if(hasAnswer&&!activityRecordedQuestions.has(q.id)){activityRecordedQuestions.add(q.id);window.EnglishPlayroomCoins?.recordLearningActivity?.();}
   if(results.filter(r=>r.type==='correct').length>=2)window.EnglishPlayroomCoins?.awardPre2A?.(q.id);
 }
 
