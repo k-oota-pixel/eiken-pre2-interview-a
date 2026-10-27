@@ -114,3 +114,7 @@ h1 { margin:0; font-size:clamp(1.5rem, 4vw, 2.2rem); letter-spacing:-.03em; }
   .answer-main input { font-size:16px; }
   .action-row > button { flex:1; padding-left:10px; padding-right:10px; }
 }
+
+.ai-note { margin:8px 0 0; color:var(--muted); font-size:.78rem; line-height:1.5; }
+.ai-status { min-height:1.3em; margin:5px 0 0; color:var(--muted); font-size:.85rem; white-space:pre-wrap; }
+.feedback.neutral { color:var(--muted); }
