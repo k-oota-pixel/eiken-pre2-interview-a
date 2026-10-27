@@ -72,11 +72,13 @@
       <div id="answerArea" class="answer-area"></div>
 
       <div class="action-row">
-        <button id="checkBtn" class="primary-btn" type="button">CHECK!</button>
+        <button id="checkBtn" class="primary-btn" type="button">AIでチェック</button>
         <button id="retryBtn" class="secondary-btn hidden" type="button">もう一度</button>
         <button id="revealBtn" class="ghost-btn" type="button">模範解答</button>
       </div>
 
+      <p class="ai-note">入力した英文はGeminiに送信され、各行ごとにフィードバックされます。個人情報は入力しないでください。</p>
+      <p id="aiStatus" class="ai-status" aria-live="polite"></p>
       <div id="modelAnswers" class="model-answers hidden"></div>
 
       <div class="nav-row">
@@ -99,7 +101,7 @@
   </main>
 
   <script type="module" src="https://k-oota-pixel.github.io/english-playroom/coin-reward.js?v=2.1.2"></script>
-  <script src="app.js?v=2.1.2"></script>
+  <script src="app.js?v=2.1.3"></script>
   <script src="selector.js"></script>
 </body>
 </html>
