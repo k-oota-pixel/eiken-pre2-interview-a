@@ -341,6 +341,7 @@ function renderQuestion() {
   $("nextBtn").textContent = state.pos === state.order.length - 1 ? "結果を見る →" : "次へ →";
   $("modelAnswers").classList.add("hidden");
   $("revealBtn").textContent = "模範解答";
+  $("aiStatus").textContent = "";
 
   const saved = state.answers[q.id] || Array(q.actions.length).fill("");
   const area = $("answerArea");
@@ -387,35 +388,70 @@ function clearFeedback() {
   $("answerArea").querySelectorAll(".feedback").forEach(f => { f.className = "feedback"; f.textContent = ""; });
 }
 
-function checkCurrent() {
-  saveCurrentInputs();
-  const q = state.order[state.pos];
-  const values = state.answers[q.id];
-  const results = evaluateInputs(q, values);
-  const hasAnswer=values.some(v=>v.trim()),score=state.revealed[q.id]?0:results.filter(r=>r.type==='correct').length,previousBest=recordedTitleBestByQuestion.get(q.id)??-1;
-  if(hasAnswer&&score>previousBest){recordedTitleBestByQuestion.set(q.id,score);window.EnglishPlayroomCoins?.recordTitleEvent?.('eiken-pre2-interview-a',{kind:'answer',itemId:String(q.id),score,total:results.length});}
-  const inputs = [...$("answerArea").querySelectorAll("input")];
-  const feedbacks = [...$("answerArea").querySelectorAll(".feedback")];
-  clearFeedback();
-
-  results.forEach((r, i) => {
-    const input = inputs[i];
-    const fb = feedbacks[i];
-    if (r.type === "correct") {
-      input.classList.add("correct"); fb.classList.add("good");
-    } else if (["spelling", "person", "grammar"].includes(r.type)) {
-      input.classList.add("almost"); fb.classList.add("warn");
-    } else {
-      input.classList.add("wrong"); fb.classList.add("bad");
-    }
-    fb.textContent = r.msg;
+async function requestAIFeedback(q, values) {
+  const {apiHeaders}=await import("https://eiken-title.onrender.com/firebase-security.js?v=2.1.3");
+  const response=await fetch("https://eiken-title.onrender.com/api/picture-a/grade",{
+    method:"POST",
+    headers:await apiHeaders(),
+    body:JSON.stringify({
+      question_id:q.id,
+      scene:q.scene,
+      expected_actions:q.actions.map(a=>variantsFor(a)),
+      answers:values.map((answer,index)=>({number:index+1,answer:answer.trim()}))
+    }),
+    signal:AbortSignal.timeout(60000)
   });
+  let result={};try{result=await response.json();}catch{}
+  if(!response.ok)throw new Error(result.error||`AI判定に失敗しました（${response.status}）。`);
+  if(!Array.isArray(result.results)||result.results.length!==values.length||result.results.some((r,i)=>r.number!==i+1||!["correct","acceptable","almost","incorrect","blank"].includes(r.verdict)||typeof r.feedback!=="string"||typeof r.suggestion!=="string"))throw new Error("AI判定の結果が不完全です。もう一度お試しください。");
+  return result.results.map(r=>({
+    type:["correct","acceptable"].includes(r.verdict)?"correct":r.verdict==="almost"?"grammar":r.verdict==="blank"?"blank":"wrong",
+    msg:r.suggestion?`${r.feedback}\n表現例：${r.suggestion}`:r.feedback
+  }));
+}
 
-  const allCorrect = results.every(r => r.type === "correct");
-  state.perfect[q.id] = allCorrect && !state.revealed[q.id];
-  $("retryBtn").classList.toggle("hidden", allCorrect);
+async function checkCurrent() {
+  saveCurrentInputs();
+  const q=state.order[state.pos],values=state.answers[q.id],hasAnswer=values.some(v=>v.trim());
+  const status=$("aiStatus"),button=$("checkBtn");
+  clearFeedback();
+  if(!hasAnswer){
+    status.textContent="英文を入力すると、Geminiが各行を個別に確認します。";
+    const emptyResults=evaluateInputs(q,values);
+    renderAnswerFeedback(emptyResults);
+    return;
+  }
+  button.disabled=true;
+  status.textContent="Geminiが各行を確認しています…";
+  let results;
+  try{
+    results=await requestAIFeedback(q,values);
+    status.textContent="Geminiが各行を判定しました。";
+  }catch(error){
+    results=evaluateInputs(q,values);
+    status.textContent=`AI判定を利用できなかったため、基本チェックで表示しています。\n${error.message}`;
+  }finally{button.disabled=false;}
+  renderAnswerFeedback(results);
+  const score=state.revealed[q.id]?0:results.filter(r=>r.type==="correct").length,previousBest=recordedTitleBestByQuestion.get(q.id)??-1;
+  if(hasAnswer&&score>previousBest){recordedTitleBestByQuestion.set(q.id,score);window.EnglishPlayroomCoins?.recordTitleEvent?.('eiken-pre2-interview-a',{kind:'answer',itemId:String(q.id),score,total:results.length});}
+  const allCorrect=results.every(r=>r.type==="correct");
+  state.perfect[q.id]=allCorrect&&!state.revealed[q.id];
+  $("retryBtn").classList.toggle("hidden",allCorrect);
   if(hasAnswer&&!activityRecordedQuestions.has(q.id)){activityRecordedQuestions.add(q.id);window.EnglishPlayroomCoins?.recordLearningActivity?.();}
-  if(results.filter(r=>r.type==='correct').length>=2)window.EnglishPlayroomCoins?.awardPre2A?.(q.id);
+  if(score>=2)window.EnglishPlayroomCoins?.awardPre2A?.(q.id);
+}
+
+function renderAnswerFeedback(results) {
+  const inputs=[...$("answerArea").querySelectorAll("input")];
+  const feedbacks=[...$("answerArea").querySelectorAll(".feedback")];
+  results.forEach((r,i)=>{
+    const input=inputs[i],fb=feedbacks[i];
+    if(r.type==="correct"){input.classList.add("correct");fb.classList.add("good");}
+    else if(r.type==="blank"){fb.classList.add("neutral");}
+    else if(["spelling","person","grammar"].includes(r.type)){input.classList.add("almost");fb.classList.add("warn");}
+    else{input.classList.add("wrong");fb.classList.add("bad");}
+    fb.textContent=r.msg;
+  });
 }
 
 function showModelAnswers(markRevealed = true) {
